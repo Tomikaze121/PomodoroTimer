@@ -1,0 +1,7 @@
+{
+  "name": "PomodoroTimer",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
