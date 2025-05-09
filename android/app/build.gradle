@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "pomodoroApp"
+    namespace "com.lequigan.pomodoroapp"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.lequigan.pomodoroapp"

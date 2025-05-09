@@ -1,4 +1,4 @@
-package io.ionic.starter;
+package com.lequigan.pomodoroapp;
 
 import com.getcapacitor.BridgeActivity;
 
