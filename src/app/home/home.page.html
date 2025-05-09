@@ -1,6 +1,6 @@
-<ion-header>
+<ion-header> 
   <ion-toolbar color="primary">
-    <ion-title>PomodoroApp</ion-title>
+    <ion-title>Pomodoro Timer</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -8,13 +8,47 @@
   <div class="clock-container">
     <h2 class="current-time">🕒 {{ currentTime }}</h2>
 
-    <div *ngIf="countdownActive">
-      <h1>{{ isBreak ? 'Break Time' : 'Work Time' }}</h1>
+    <div *ngIf="countdownActive" class="timer-display">
+      <h1 [style.color]="isBreak ? 'var(--ion-color-success)' : 'var(--ion-color-primary)'">
+        {{ isBreak ? 'BREAK TIME' : 'WORK TIME' }}
+      </h1>
       <div class="timer">{{ formatTime(remainingTime) }}</div>
     </div>
 
-    <ion-button expand="block" color="success" (click)="startPomodoroCycle()" [disabled]="countdownActive">
-      Start Pomodoro Cycle
-    </ion-button>
+    <ion-item>
+      <ion-label position="stacked">Work Duration (seconds)</ion-label>
+      <ion-input 
+        type="number" 
+        [(ngModel)]="workSeconds" 
+        (ionChange)="updateDurations()" 
+        min="1" 
+        step="1">
+      </ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Break Duration (seconds)</ion-label>
+      <ion-input 
+        type="number" 
+        [(ngModel)]="breakSeconds" 
+        (ionChange)="updateDurations()" 
+        min="1" 
+        step="1">
+      </ion-input>
+    </ion-item>
+
+    <div class="button-group">
+      <ion-button expand="block" color="primary" (click)="startPomodoroCycle()" [disabled]="countdownActive && !isPaused">
+        {{ countdownActive ? 'Restart' : 'Start' }}
+      </ion-button>
+
+      <ion-button expand="block" color="warning" (click)="togglePause()" [disabled]="!countdownActive">
+        {{ isPaused ? 'Resume' : 'Pause' }}
+      </ion-button>
+
+      <ion-button expand="block" color="danger" (click)="resetTimer()" [disabled]="!countdownActive">
+        Reset
+      </ion-button>
+    </div>
   </div>
 </ion-content>

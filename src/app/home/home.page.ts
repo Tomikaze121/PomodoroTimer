@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Platform } from '@ionic/angular';
-import { LocalNotifications } from '@capacitor/local-notifications';
+import { Platform, ToastController } from '@ionic/angular';
 import { App as CapacitorApp } from '@capacitor/app';
 
 @Component({
@@ -13,19 +12,28 @@ export class HomePage implements OnInit, OnDestroy {
   currentTime: string = '';
   interval: any;
 
-  pomodoroDuration = 25 * 60;
-  breakDuration = 5 * 60;
+  // Timer durations (in seconds)
+  workDuration = 25 * 60; 
+  breakDuration = 5 * 60; 
+  
+  // User inputs (in seconds)
+  workSeconds = 25 * 60;
+  breakSeconds = 5 * 60;
 
   remainingTime: number = 0;
   countdownActive = false;
   isBreak = false;
+  isPaused = false;
 
   timerInterval: any;
   backHandler: any;
 
-  constructor(private platform: Platform) {}
+  constructor(
+    private platform: Platform,
+    private toastController: ToastController
+  ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     this.updateCurrentTime();
     this.interval = setInterval(() => this.updateCurrentTime(), 1000);
 
@@ -36,7 +44,7 @@ export class HomePage implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     clearInterval(this.interval);
-    clearInterval(this.timerInterval);
+    this.resetTimer();
     this.backHandler.unsubscribe();
   }
 
@@ -45,45 +53,87 @@ export class HomePage implements OnInit, OnDestroy {
     this.currentTime = now.toLocaleTimeString();
   }
 
-  startPomodoroCycle() {
-    this.remainingTime = this.pomodoroDuration;
+  updateDurations() {
+    this.workDuration = this.workSeconds;
+    this.breakDuration = this.breakSeconds;
+    if (this.countdownActive && !this.isPaused) {
+      this.resetTimer();
+    }
+  }
+
+  async startPomodoroCycle() {
+    this.updateDurations();
+    this.resetTimer();
+    this.remainingTime = this.workDuration;
     this.isBreak = false;
     this.countdownActive = true;
+    this.isPaused = false;
+    await this.showToast(`Work started for ${this.formatSeconds(this.workDuration)}`);
     this.runTimer();
+  }
+
+  async togglePause() {
+    if (this.countdownActive) {
+      if (this.isPaused) {
+        this.isPaused = false;
+        this.runTimer();
+        await this.showToast('Timer resumed');
+      } else {
+        clearInterval(this.timerInterval);
+        this.isPaused = true;
+        await this.showToast('Timer paused');
+      }
+    }
   }
 
   runTimer() {
     this.timerInterval = setInterval(() => {
-      if (this.remainingTime > 0) {
+      if (!this.isPaused && this.remainingTime > 0) {
         this.remainingTime--;
-      } else {
+        
+        if (this.remainingTime === 5) {
+          const msg = this.isBreak 
+            ? 'Break ending in 5 seconds!' 
+            : 'Work ending in 5 seconds!';
+          this.showToast(msg);
+        }
+      } else if (!this.isPaused && this.remainingTime <= 0) {
         clearInterval(this.timerInterval);
-        this.sendNotification(this.isBreak ? 'Break over! Time to focus again.' : 'Pomodoro done! Take a short break.');
+        const message = this.isBreak 
+          ? 'Break over! Time to work.' 
+          : 'Work done! Time for break.';
+        this.showToast(message);
+        
         this.isBreak = !this.isBreak;
-        this.remainingTime = this.isBreak ? this.breakDuration : this.pomodoroDuration;
+        this.remainingTime = this.isBreak ? this.breakDuration : this.workDuration;
+        
+        const nextPhaseMsg = this.isBreak
+          ? `Break started for ${this.formatSeconds(this.breakDuration)}`
+          : `Work started for ${this.formatSeconds(this.workDuration)}`;
+        this.showToast(nextPhaseMsg);
+        
         this.runTimer();
       }
     }, 1000);
   }
 
-  sendNotification(message: string) {
-    LocalNotifications.schedule({
-      notifications: [
-        {
-          title: 'PomodoroApp',
-          body: message,
-          id: new Date().getTime(),
-          sound: 'beep.aiff',
-          schedule: { at: new Date() },
-          smallIcon: 'ic_stat_icon_config_sample',
-        }
-      ]
-    });
+  resetTimer() {
+    clearInterval(this.timerInterval);
+    this.countdownActive = false;
+    this.isPaused = false;
+    this.remainingTime = 0;
+    this.isBreak = false;
+    this.showToast('Timer reset');
+  }
 
-    // Optional vibration (for Android)
-    if (navigator.vibrate) {
-      navigator.vibrate(1000);
-    }
+  async showToast(message: string) {
+    const toast = await this.toastController.create({
+      message: message,
+      duration: 2000,
+      position: 'bottom',
+      color: this.isBreak ? 'success' : 'primary'
+    });
+    await toast.present();
   }
 
   formatTime(seconds: number): string {
@@ -91,6 +141,11 @@ export class HomePage implements OnInit, OnDestroy {
     const s = seconds % 60;
     return `${this.pad(m)}:${this.pad(s)}`;
   }
+
+  formatSeconds(seconds: number): string {
+    return `${seconds} second${seconds !== 1 ? 's' : ''}`;
+  }
+  
 
   pad(n: number): string {
     return n < 10 ? '0' + n : n.toString();
