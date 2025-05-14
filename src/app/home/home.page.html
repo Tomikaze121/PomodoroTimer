@@ -1,4 +1,4 @@
-<ion-header> 
+<ion-header>
   <ion-toolbar color="primary">
     <ion-title>Pomodoro Timer</ion-title>
   </ion-toolbar>
@@ -16,25 +16,21 @@
     </div>
 
     <ion-item>
+      <ion-label position="stacked">Work Duration (minutes)</ion-label>
+      <ion-input type="number" [(ngModel)]="workMinutes" (ionChange)="updateDurations()" min="0"></ion-input>
+    </ion-item>
+    <ion-item>
       <ion-label position="stacked">Work Duration (seconds)</ion-label>
-      <ion-input 
-        type="number" 
-        [(ngModel)]="workSeconds" 
-        (ionChange)="updateDurations()" 
-        min="1" 
-        step="1">
-      </ion-input>
+      <ion-input type="number" [(ngModel)]="workExtraSeconds" (ionChange)="updateDurations()" min="0"></ion-input>
     </ion-item>
 
     <ion-item>
+      <ion-label position="stacked">Break Duration (minutes)</ion-label>
+      <ion-input type="number" [(ngModel)]="breakMinutes" (ionChange)="updateDurations()" min="0"></ion-input>
+    </ion-item>
+    <ion-item>
       <ion-label position="stacked">Break Duration (seconds)</ion-label>
-      <ion-input 
-        type="number" 
-        [(ngModel)]="breakSeconds" 
-        (ionChange)="updateDurations()" 
-        min="1" 
-        step="1">
-      </ion-input>
+      <ion-input type="number" [(ngModel)]="breakExtraSeconds" (ionChange)="updateDurations()" min="0"></ion-input>
     </ion-item>
 
     <div class="button-group">
